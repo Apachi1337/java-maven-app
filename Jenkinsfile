@@ -1,34 +1,69 @@
+def gv
+
 pipeline {
     agent any
+
     parameters {
-        choice(name: 'VERSION', choices: ['1.1.0','1.2.0','1.3.0' ]  , description: ' ')
-        booleanParam(name:'executeTests', defaultValue: true, description: '' )
+        choice(name: 'VERSION', 
+               choices: ['1.1.0', '1.2.0', '1.3.0'], 
+               description: 'Select the version to deploy')
         
-        }
- 
+        booleanParam(name: 'executeTests', 
+                     defaultValue: true, 
+                     description: 'Should tests be executed?')
+    }
+
+    environment {
+        SCRIPT_PATH = 'script.groovy'
+    }
+
     stages {
+        stage('Init') {
+            steps {
+                script {
+                    echo '🟡 Initializing...'
+                    gv = load "${SCRIPT_PATH}"
+                }
+            }
+        }
+
         stage('Build') {
             steps {
-                echo "building the application"
+                script {
+                    gv.buildApp()
+                }
             }
         }
 
         stage('Test') {
             when {
                 expression {
-                    params.executeTests
-
+                    return params.executeTests
                 }
             }
             steps {
-                echo "testing the application"
+                script {
+                    gv.testApp()
+                }
             }
         }
 
         stage('Deploy') {
+            input{
+                message "select the environment to deploy to"
+                ok "Done"
+                parameters{
+                    choice(name: 'ENV', 
+               choices: ['dev', 'staging', 'production'], 
+               description: 'Select the version to deploy')
+
+                }
+            }
             steps {
-                echo "deploying the application"
-                echo "deploing version ${params.VERSION}"
+                script {
+                    gv.deployApp()
+                    echo "Deploying to ${ENV}"
+                }
             }
         }
     }
