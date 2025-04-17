@@ -1,14 +1,20 @@
-def buildApp() {
-    echo 'Building the project...'
+def buildJar() {
+    echo '🔧 Building the application...'
+    sh 'mvn package'
 }
 
-def testApp() {
-    echo 'Running tests...'
+def buildImage() {
+    echo '🔧 Building the docker image...'
+    withCredentials([usernamePassword(credentialsId: 'docker-hub-repo', passwordVariable: 'PASS', usernameVariable: 'USER')]) { 
+    sh 'docker build -t cdickersoncloudcoder/demo-app:jma-2.0 .'
+    sh 'echo $PASS | docker login -u $USER --password-stdin'
+    sh 'docker push cdickersoncloudcoder/demo-app:jma-2.0'
+                }
 }
 
-def deployApp() {
+def deployImage() {
     echo 'Deploying the application...'
-    echo "deploying version ${params.VERSION}"
+    
 }
 
 return this

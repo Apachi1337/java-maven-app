@@ -1,3 +1,5 @@
+def gv
+
 pipeline {
     agent any
 
@@ -6,29 +8,35 @@ pipeline {
     }
 
     stages {
+        stage("init") {
+            steps {
+                script {
+                    gv = load 'script.groovy'
+                }
+            }
+        }
+
         stage('Build jar') {
             steps {
-                echo '🔧 Building the application...'
-                sh 'mvn package'
+                script {
+                    gv.buildJar()
+                }
             }
         }
 
         stage('Build image') {
             steps {
-                echo '🔧 Building the docker image...'
-                withCredentials([usernamePassword(credentialsId: 'docker-hub-repo', passwordVariable: 'PASS', usernameVariable: 'USER')]) { 
-                    sh 'docker build -t cdickersoncloudcoder/demo-app:jma-2.0 .'
-                    sh 'echo $PASS | docker login -u $USER --password-stdin'
-                    sh 'docker push cdickersoncloudcoder/demo-app:jma-2.0'
+                script {
+                    gv.buildImage()
                 }
             }
         }
 
         stage('Deploy') {
             steps {
-                echo '🚀 Deploying the application...'
-                // Add your deploy commands here
-                // For example: sh './deploy.sh' or scp to a server
+                script {
+                    gv.deployImage()
+                }
             }
         }
     }
