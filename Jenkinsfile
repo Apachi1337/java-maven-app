@@ -1,5 +1,4 @@
-def gv 
-
+def gv
 
 pipeline {
     agent any
@@ -9,46 +8,53 @@ pipeline {
     }
 
     stages {
-        stage("init"){
-            steps{
-                script{
+        stage("init") {
+            steps {
+                script {
                     gv = load "script.groovy"
                 }
             }
         }
+        
         stage('Build') {
             steps {
-                script{
+                script {
                     gv.buildApp()
                 }
             }
         }
 
         stage('Test') {
-            when{
+            when {
                 expression {
                     params.executeTests
                 }
             }
             steps {
-                script{
+                script {
                     gv.testApp()
                 }
-                
             }
         }
 
         stage('Deploy') {
             steps {
-                 script{
-                    env.ENV = input message: "select the environment to deploy to", ok "Done",  parameters: {
-                    choice(name: 'ONE', choices: ['dev', 'staging', 'prod'], description: '' )
-                    gv.deployApp()
-                    echo "Deploying to ${ENV}"
+                script {
+                    env.ENV = input(
+                        message: "Select the environment to deploy to", 
+                        ok: "Done", 
+                        parameters: [
+                            choice(
+                                name: 'ONE', 
+                                choices: ['dev', 'staging', 'prod'], 
+                                description: ''
+                            )
+                        ]
+                    )
+                    gv.deployApp()  // Assuming this is a valid step
+                    echo "Deploying to ${env.ENV}"  // Accessing the environment variable correctly
                 }
-
             }
         }
     }
 }
-
