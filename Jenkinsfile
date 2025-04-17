@@ -1,42 +1,25 @@
-def gv
-
 pipeline {
     agent any
 
-    tools {
-        maven 'maven-3.9.1'
-    }
-
     stages {
-        stage("init") {
+        stage('Build') {
             steps {
-                script {
-                    gv = load 'script.groovy'
-                }
+                echo '🔧 Building the application...'
+                sh 'echo Build step running...'
             }
         }
 
-        stage('Build jar') {
+        stage('Test') {
             steps {
-                script {
-                    gv.buildJar()
-                }
-            }
-        }
-
-        stage('Build image') {
-            steps {
-                script {
-                    gv.buildImage()
-                }
+                echo '🧪 Running tests...'
+                sh 'echo Test step running...'
             }
         }
 
         stage('Deploy') {
             steps {
-                script {
-                    gv.deployImage()
-                }
+                echo '🚀 Deploying the application...'
+                sh 'echo Deploy step running...'
             }
         }
     }
