@@ -48,7 +48,7 @@ pipeline {
                 message "Select the env to deply to"
                 ok "Done"
                 parameters {
-                    choice(name: 'ENV', choiced: ['DEV', "STAGING", "PROD"], description: '')
+                    choice(name: 'ENV', choices: ['DEV', "STAGING", "PROD"], description: '')
                 }
             }
             steps {
