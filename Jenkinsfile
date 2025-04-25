@@ -2,55 +2,42 @@ def gv
 
 pipeline {
     agent any
-    parameters {
-        choice(name: 'VERSIONS', choices: ['1.1.0', '1.2.0', '1.3.0'], description: '')
-        booleanParam(name: 'executeTests', defaultValue: true, description: '')
-    }
     tools {
-        maven "maven-3.9"
-    }
-    environment {
-        NEW_VERSION='1.3.0'
-        SERVER_CREDENTIALS = credentials('server_credentials')
+        maven 'maven-3.9'
     }
     stages {
-        stage("init"){
+        stage("build jar"){
             steps {
                 script {
-                    gv = load "script.groovy"
+                    echo "building the application ..."
+                    sh 'mvn package'
                 }
             }
+
         }
 
-        stage("build"){
+        stage("build docker image"){
             steps {
                 script {
-                    gv.buildApp()
+                    echo "building the application's image for Docker ..."
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub_auth', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+                        sh 'docker build . -t tdascal/demo-app:jma-2.0 .'
+                        sh 'echo $PASS | docker login -u $USER --password-stdin'
+                        sh 'docker push tdascal/demo-app:jma-2.0'
+                    }
                 }
             }
-        }
 
-        stage("test"){
-            when {
-                expression {
-                    params.executeTests
-                }
-            }
-            steps {
-                script{
-                    gv.testApp()
-                }
-            }
         }
 
         stage("deploy"){
             steps {
                 script {
-                    env.ENV = input message: "Select the environment to deploy to", ok: "Done", parameters: [choice(name: 'ONE', choices: ['dev', 'staging', 'prod'], description: '')]
-                    gv.deployApp()
-                    echo "Deploying to ${ENV}"
+                    echo "Deploying the applocation ..."
+                    
                 }
             }
+
         }
     }
 }
