@@ -3,8 +3,8 @@ def gv
 pipeline {
     agent any
     parameters {
-        choice(name: 'VERSION', choices: ['1.1.0', '1.2.0', '1.3.0'], description: '')
-        booleanParam(name: 'executeTests', defaultValue: true, description: '')
+        choice(name: 'VERSION', choices: ['1.1.0', '1.2.0', '1.3.0'], description: 'Choose the version')
+        booleanParam(name: 'executeTests', defaultValue: true, description: 'Execute tests?')
     }
 
     stages {
@@ -13,7 +13,7 @@ pipeline {
                 script {
                     gv = load "script.groovy"
                 }
-                echo "building app....."
+                echo "Building app..."
             }
         }
         stage('Build') {
@@ -36,14 +36,19 @@ pipeline {
             }
         }
         stage('Deploy') {
-           
             steps {
                 script {
-                    env.ENV = input message: "select the environment to deploy to..." , ok "Env selected...", parameters: [choice(name: 'ONE', choices: ['dev', 'staging', 'prod'], description: '')] 
-
+                    // Capture the environment choice from the user
+                    env.ENV = input(
+                        message: "Select the environment to deploy to...",
+                        ok: "Env selected...",
+                        parameters: [
+                            choice(name: 'ONE', choices: ['dev', 'staging', 'prod'], description: 'Choose the deployment environment')
+                        ]
+                    )
+                    // Deploy to the selected environment
                     gv.deployApp()
-                    echo "Deploying to ${ENV}"
-                    
+                    echo "Deploying to ${env.ENV}"
                 }
             }
         }
