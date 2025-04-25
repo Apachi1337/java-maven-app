@@ -2,6 +2,28 @@ def gv
 
 pipeline {
     agent any
+    stages {
+        stage("Start"){
+            steps {
+                echo "Start ..."
+            }
+        }
+
+        stage("Mid"){
+            steps {
+                echo "Mid ..."
+            }
+        }
+
+        stage("End"){
+            steps {
+                echo "End ..."
+            }
+        }
+    }
+}
+/* pipeline {
+    agent any
     tools {
         maven 'Maven'
     }
@@ -67,4 +89,4 @@ pipeline {
          }
         }
     }
-}
+} */
