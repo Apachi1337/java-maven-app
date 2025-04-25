@@ -37,7 +37,6 @@ pipeline {
             steps {
                 echo "deploying the application ..."
                 echo "deploying version ${params.VERSIONS}"
-                echo "Working with ${env.SERVER_CREDENTIALS.Username} and ${env.SERVER_CREDENTIALS.Password}"
             }
         }
     }
