@@ -1,38 +1,31 @@
-def gv // Declare the variable globally
-
 pipeline {
     agent any
-    tools {
-        maven "maven-3.9"
-    }
 
     stages {
-        stage("init") {
+        stage('Test') {
             steps {
-                script {
-                    gv = load "script.groovy"  // Loading the Groovy script into gv
-                }
+                echo "Running tests..."
+                echo "Executing pipeline for $BRANCH_NAME"
             }
         }
-        stage('Build jar') {
-            steps {
-                script {
-                    gv.buildJar()  // Calling the buildJar function from the loaded script
+        stage('Build') {
+            when{
+                expression{
+                    BRANCH_NAME == "master"
                 }
             }
-        }
-        stage('Build image') {
             steps {
-                script {
-                    gv.buildImage()  // Calling the buildImage function from the loaded script
-                }
+                echo "Building the application..."
             }
         }
         stage('Deploy') {
-            steps {
-                script {
-                    gv.deployApp()  // Calling the deployApp function from the loaded script
+            when{
+                expression{
+                    BRANCH_NAME == "master"
                 }
+            }
+            steps {
+                echo "Deploying the application..."
             }
         }
     }
