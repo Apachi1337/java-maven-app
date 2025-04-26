@@ -1,3 +1,5 @@
+def gv // Declare the variable globally
+
 pipeline {
     agent any
     tools {
@@ -5,31 +7,31 @@ pipeline {
     }
 
     stages {
+        stage("init") {
+            steps {
+                script {
+                    gv = load "script.groovy"  // Loading the Groovy script into gv
+                }
+            }
+        }
         stage('Build jar') {
             steps {
                 script {
-                    echo "Building application....."
-                    sh 'mvn package'  // Corrected 'mav' to 'mvn'
+                    gv.buildJar()  // Calling the buildJar function from the loaded script
                 }
             }
         }
         stage('Build image') {
             steps {
                 script {
-                    echo "Building Docker image...."
-                    withCredentials([usernamePassword(credentialsId: "docker-hub-repo", passwordVariable: 'PASS', usernameVariable: 'USER')]) {
-                        sh 'docker build -t cdickersoncloudcoder/demo-app1.3:2.1 .'  // Building docker image
-                        sh 'echo $PASS | docker login -u $USER --password-stdin'  // Login to Docker Hub
-                        sh 'docker push cdickersoncloudcoder/demo-app1.3:2.1'  // Push the image to Docker Hub
-                    }
+                    gv.buildImage()  // Calling the buildImage function from the loaded script
                 }
             }
         }
         stage('Deploy') {
             steps {
                 script {
-                    echo "Deploying application....."
-                    // You can add further deployment steps here (e.g., Kubernetes, AWS ECS, etc.)
+                    gv.deployApp()  // Calling the deployApp function from the loaded script
                 }
             }
         }
