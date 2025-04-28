@@ -24,10 +24,12 @@ pipeline {
             }
         }
 
-        stage("build image") {
+        stage("build and push image") {
             steps {
                 script {
-                    buildImage 'cdickersoncloudcoder/demo-app1.3:2.3'
+                    buildImage 'cdickersoncloudcoder/demo-app1.3:2.4'
+                    dockerLogin()
+                    dockerPush 'cdickersoncloudcoder/demo-app1.3:2.4'
                 }
             }
         }
