@@ -27,7 +27,7 @@ pipeline {
         stage("build image") {
             steps {
                 script {
-                    buildImage()
+                    buildImage 'cdickersoncloudcoder/demo-app1.3:2.3'
                 }
             }
         }
