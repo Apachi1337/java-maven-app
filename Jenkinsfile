@@ -1,14 +1,22 @@
 #!/usr/bin/env groovy
-@Library('jenkins-shared-library')
+
+library identifier: 'jenkins-shared-library@main', retriever: modernSCM(
+    [$class: 'GitSCMSource', 
+    remote: 'https://gitlab.com/devops-bootcamp8333314/entering-learning-phase-3-devops-core/jenkins-shared-library.git',
+    credentialsId: 'gitlab-credentials']
+)
+
 def gv
 
 pipeline {   
     agent any
+
     tools {
-    maven 'maven-3.9'
-}
+        maven 'maven-3.9'
+    }
+
     stages {
-        stage("init") {
+        stage("Init") {
             steps {
                 script {
                     gv = load "script.groovy"
@@ -16,7 +24,7 @@ pipeline {
             }
         }
 
-        stage("build jar") {
+        stage("Build Jar") {
             steps {
                 script {
                     buildJar()
@@ -24,17 +32,17 @@ pipeline {
             }
         }
 
-        stage("build and push image") {
+        stage("Build and Push Image") {
             steps {
                 script {
-                    buildImage 'cdickersoncloudcoder/demo-app1.3:2.4'
+                    buildImage 'cdickersoncloudcoder/demo-app1.3:3.0'
                     dockerLogin()
-                    dockerPush 'cdickersoncloudcoder/demo-app1.3:2.4'
+                    dockerPush 'cdickersoncloudcoder/demo-app1.3:3.0'
                 }
             }
         }
         
-        stage("deploy") {
+        stage("Deploy") {
             steps {
                 script {
                     gv.deployApp()
