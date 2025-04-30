@@ -1,31 +1,51 @@
+def gv
+
 pipeline {
     agent any
-
+    tools {
+        maven 'Maven'
+    }
     stages {
-        stage('Test') {
+        stage('increment version') {
             steps {
-                echo "Running tests..."
-                echo "Executing pipeline for $BRANCH_NAME"
-            }
-        }
-        stage('Build') {
-            when{
-                expression{
-                    BRANCH_NAME == "master"
+                script {
+                    echo 'incrementing app version...'
+                    sh '''
+                        mvn build-helper:parse-version versions:set \
+                        -DnewVersion=\\${parsedVersion.majorVersion}.\\${parsedVersion.minorVersion}.\\${parsedVersion.nextIncrementalVersion} \
+                        versions:commit
+                    '''
+                    def matcher = readFile('pom.xml') =~ '<version>(.+)</version>'
+                    def version = matcher[0][1]
+                    env.IMAGE_NAME = "${version}-${BUILD_NUMBER}"
                 }
             }
-            steps {
-                echo "Building the application..."
-            }
         }
-        stage('Deploy') {
-            when{
-                expression{
-                    BRANCH_NAME == "master"
+        stage('build app') {
+            steps {
+                script {
+                    echo 'building the application...'
+                    sh 'mvn clean package'
                 }
             }
+        }
+        stage('build image') {
             steps {
-                echo "Deploying the application..."
+                script {
+                    echo 'building the docker image...'
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-repo', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+                        sh "docker build -t cdickersoncloudcoder/demo-app:${IMAGE_NAME} ."
+                        sh 'echo $PASS | docker login -u $USER --password-stdin'
+                        sh "docker push cdickersoncloudcoder/demo-app:${IMAGE_NAME}"
+                    }
+                }
+            }
+        }
+        stage('deploy') {
+            steps {
+                script {
+                    echo 'deploying docker image...'
+                }
             }
         }
     }
