@@ -56,9 +56,10 @@ pipeline {
                             git branch
                             git config --list
                             git remote set-url origin https://${USER}:${PASS}@gitlab.com/devops-bootcamp-2025/java-maven-app.git
+                            git config pull.rebase false
                             git add .
                             git commit -m "ci: version bump"
-                            git pull origin jenkins-jobs && git push origin HEAD:jenkins-jobs
+                            git pull origin jenkins-jobs && git push origin HEAD:ci/version-bump-${BUILD_NUMBER}
                         '''
                     }
                 }
