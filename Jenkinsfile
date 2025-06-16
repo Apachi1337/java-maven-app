@@ -1,6 +1,6 @@
 def gv
 
-pipeline {   
+pipeline {
     agent any
     tools {
         maven 'maven-3.9'
@@ -10,14 +10,10 @@ pipeline {
             steps {
                 script {
                     echo 'incrementing app version...'
-                    sh '''bash -c "mvn build-helper:parse-version versions:set -DnewVersion=\\${parsedVersion.majorVersion}.\\${parsedVersion.minorVersion}.\\${parsedVersion.nextIncrementalVersion} versions:commit"'''
+                    sh 'mvn build-helper:parse-version versions:set -DnewVersion=\\${parsedVersion.majorVersion}.\\${parsedVersion.minorVersion}.\\${parsedVersion.nextIncrementalVersion} versions:commit'
                     def matcher = readFile('pom.xml') =~ '<version>(.+)</version>'
-                    if (matcher) {
-                        def version = matcher[0][1]
-                        env.IMAGE_NAME = "${version}-${BUILD_NUMBER}"
-                    } else {
-                        error "Version not found in pom.xml"
-                    }
+                    def version = matcher[0][1]
+                    env.IMAGE_NAME = "$version-$BUILD_NUMBER"
                 }
             }
         }
@@ -45,7 +41,7 @@ pipeline {
             steps {
                 script {
                     echo 'deploying docker image...'
-                    // Add deployment steps here when ready
+                    // Deployment logic goes here if needed
                 }
             }
         }
@@ -56,11 +52,9 @@ pipeline {
                         sh '''
                             git config --global user.email "jenkins@example.com"
                             git config --global user.name "jenkins"
-
                             git status
                             git branch
                             git config --list
-
                             git remote set-url origin https://${USER}:${PASS}@gitlab.com/devops-bootcamp-2025/java-maven-app.git
                             git add .
                             git commit -m "ci: version bump"
