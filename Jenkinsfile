@@ -59,7 +59,7 @@ pipeline {
                             git config pull.rebase false
                             git add .
                             git commit -m "ci: version bump"
-                            git pull origin jenkins-jobs && git push origin HEAD:ci/version-bump-${BUILD_NUMBER}
+                            git push origin HEAD:ci/version-bump-${BUILD_NUMBER}
                         '''
                     }
                 }
