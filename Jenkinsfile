@@ -59,7 +59,7 @@ pipeline {
                             git config pull.rebase false
                             git add .
                             git commit -m "ci: version bump" || echo "No changes to commit"
-                            git push origin HEAD:ci/version-bump-${BUILD_NUMBER}
+                            git push origin HEAD:refs/heads/ci/version-bump-${BUILD_NUMBER}
                         '''
                     }
                 }
