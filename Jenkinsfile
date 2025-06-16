@@ -10,12 +10,16 @@ pipeline {
             steps {
                 script {
                     echo 'incrementing app version...'
-                    sh 'mvn build-helper:parse-version versions:set \
-                        -DnewVersion=\\\${parsedVersion.majorVersion}.\\\${parsedVersion.minorVersion}.\\\${parsedVersion.nextIncrementalVersion} \
-                        versions:commit'
+                    sh '''mvn build-helper:parse-version versions:set \
+                        -DnewVersion=${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.nextIncrementalVersion} \
+                        versions:commit'''
                     def matcher = readFile('pom.xml') =~ '<version>(.+)</version>'
-                    def version = matcher[0][1]
-                    env.IMAGE_NAME = "$version-$BUILD_NUMBER"
+                    if (matcher) {
+                        def version = matcher[0][1]
+                        env.IMAGE_NAME = "${version}-${BUILD_NUMBER}"
+                    } else {
+                        error "Version not found in pom.xml"
+                    }
                 }
             }
         }
@@ -43,24 +47,27 @@ pipeline {
             steps {
                 script {
                     echo 'deploying docker image...'
+                    // Add deployment steps here when ready
                 }
             }
         }
-        stage('commit version update'){
+        stage('commit version update') {
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: 'gitlab-credentials', passwordVariable: 'PASS', usernameVariable: 'USER')]){
-                        sh 'git config --global user.email "jenkins@example.com"'
-                        sh 'git config --global user.name "jenkins"'
+                    withCredentials([usernamePassword(credentialsId: 'gitlab-credentials', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                        sh '''
+                            git config --global user.email "jenkins@example.com"
+                            git config --global user.name "jenkins"
 
-                        sh 'git status'
-                        sh 'git branch'
-                        sh 'git config --list'
+                            git status
+                            git branch
+                            git config --list
 
-                        sh "git remote set-url origin https://shlaskin:${PASS}@gitlab.com/devops-bootcamp-2025/java-maven-app.git"
-                        sh 'git add .'
-                        sh 'git commit -m "ci: version bump"'
-                        sh 'git push origin HEAD:jenkins-jobs'
+                            git remote set-url origin https://${USER}:${PASS}@gitlab.com/devops-bootcamp-2025/java-maven-app.git
+                            git add .
+                            git commit -m "ci: version bump"
+                            git push origin HEAD:jenkins-jobs
+                        '''
                     }
                 }
             }
