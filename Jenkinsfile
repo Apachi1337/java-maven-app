@@ -1,9 +1,11 @@
-def gv
-
 pipeline {
     agent any
     tools {
         maven 'maven-3.9'
+    }
+    environment {
+        PROJECT_NAME = "java-maven-app"
+        GITLAB_API_URL = "https://gitlab.com/api/v4/projects"
     }
     stages {
         stage('increment version') {
@@ -17,6 +19,7 @@ pipeline {
                 }
             }
         }
+
         stage('build app') {
             steps {
                 script {
@@ -25,6 +28,7 @@ pipeline {
                 }
             }
         }
+
         stage('build image') {
             steps {
                 script {
@@ -37,29 +41,41 @@ pipeline {
                 }
             }
         }
+
         stage('deploy') {
             steps {
                 script {
                     echo 'deploying docker image...'
-                    // Deployment logic goes here if needed
+                    // Placeholder for deployment logic
                 }
             }
         }
-        stage('commit version update') {
+
+        stage('commit version update and create merge request') {
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: 'gitlab-credentials', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                    withCredentials([
+                        usernamePassword(credentialsId: 'gitlab-credentials', usernameVariable: 'USER', passwordVariable: 'PASS'),
+                        string(credentialsId: 'gitlab-api-token', variable: 'GITLAB_TOKEN')
+                    ]) {
                         sh '''
                             git config --global user.email "jenkins@example.com"
                             git config --global user.name "jenkins"
-                            git status
-                            git branch
-                            git config --list
                             git remote set-url origin https://${USER}:${PASS}@gitlab.com/devops-bootcamp-2025/java-maven-app.git
                             git config pull.rebase false
                             git add .
                             git commit -m "ci: version bump" || echo "No changes to commit"
                             git push origin HEAD:refs/heads/ci/version-bump-${BUILD_NUMBER}
+                            
+                            # Get project ID dynamically
+                            PROJECT_ID=$(curl -s --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" "${GITLAB_API_URL}?search=${PROJECT_NAME}" | jq '.[0].id')
+
+                            # Create Merge Request
+                            curl --request POST --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" \
+                            --data "source_branch=ci/version-bump-${BUILD_NUMBER}" \
+                            --data "target_branch=master" \
+                            --data "title=ci: version bump to ${IMAGE_NAME}" \
+                            ${GITLAB_API_URL}/$PROJECT_ID/merge_requests
                         '''
                     }
                 }
