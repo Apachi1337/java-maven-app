@@ -1,13 +1,18 @@
 pipeline {
     agent any
+
     tools {
         maven 'maven-3.9'
     }
+
     environment {
         PROJECT_NAME = "java-maven-app"
         GITLAB_API_URL = "https://gitlab.com/api/v4/projects"
+        PROJECT_ID = "70875470"
     }
+
     stages {
+
         stage('increment version') {
             steps {
                 script {
@@ -15,7 +20,7 @@ pipeline {
                     sh 'mvn build-helper:parse-version versions:set -DnewVersion=\\${parsedVersion.majorVersion}.\\${parsedVersion.minorVersion}.\\${parsedVersion.nextIncrementalVersion} versions:commit'
                     def matcher = readFile('pom.xml') =~ '<version>(.+)</version>'
                     def version = matcher[0][1]
-                    env.IMAGE_NAME = "$version-$BUILD_NUMBER"
+                    env.IMAGE_NAME = "${version}-${BUILD_NUMBER}"
                 }
             }
         }
@@ -46,7 +51,7 @@ pipeline {
             steps {
                 script {
                     echo 'deploying docker image...'
-                    // Placeholder for deployment logic
+                    // Your deployment logic goes here
                 }
             }
         }
@@ -58,7 +63,7 @@ pipeline {
                         usernamePassword(credentialsId: 'gitlab-credentials', usernameVariable: 'USER', passwordVariable: 'PASS'),
                         string(credentialsId: 'gitlab-api-token', variable: 'GITLAB_TOKEN')
                     ]) {
-                        sh '''
+                        sh """
                             git config --global user.email "jenkins@example.com"
                             git config --global user.name "jenkins"
                             git remote set-url origin https://${USER}:${PASS}@gitlab.com/devops-bootcamp-2025/java-maven-app.git
@@ -66,17 +71,12 @@ pipeline {
                             git add .
                             git commit -m "ci: version bump" || echo "No changes to commit"
                             git push origin HEAD:refs/heads/ci/version-bump-${BUILD_NUMBER}
-                            
-                            # Get project ID dynamically
-                            PROJECT_ID=$(curl -s --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" "${GITLAB_API_URL}?search=${PROJECT_NAME}" | jq '.[0].id')
 
-                            # Create Merge Request
-                            curl --request POST --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" \
-                            --data "source_branch=ci/version-bump-${BUILD_NUMBER}" \
-                            --data "target_branch=master" \
-                            --data "title=ci: version bump to ${IMAGE_NAME}" \
-                            ${GITLAB_API_URL}/$PROJECT_ID/merge_requests
-                        '''
+                            curl --request POST --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" \\
+                                 --header "Content-Type: application/json" \\
+                                 --data '{"source_branch": "ci/version-bump-${BUILD_NUMBER}", "target_branch": "master", "title": "ci: version bump"}' \\
+                                 ${GITLAB_API_URL}/${PROJECT_ID}/merge_requests
+                        """
                     }
                 }
             }
