@@ -1,2 +1,19 @@
-.idea/*
-target
+# Maven output
+/target/
+
+# IDE
+.idea/
+*.iml
+
+# OS or tooling files
+.DS_Store
+
+# Backup files
+*.bak
+*.tmp
+
+# Jenkins/CI metadata
+*.log
+*.xml
+*.lock
+*.swp
