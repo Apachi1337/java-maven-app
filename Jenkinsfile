@@ -1,36 +1,40 @@
 pipeline {
     agent any
-    tools {
-        maven 'maven-3.11'
-    }
+
     stages {
-        stage("build jar") {
+        stage("test") {
             steps {
                 script {
-                    echo "building the application..."
-                    sh 'mvn package'
+                    echo "Testing the application...."
+                    echo "Executing pipeline for branch $BRANCH_NAME"
                 }
             }
         }
-                stage("build image") {
+
+        stage("build") {
+            when {
+                expression {
+                    BRANCH_NAME == "master"
+                }
+            }
             steps {
                 script {
-                    echo "building the docker image..."
-                    withCredentials([usernamePassword(credentialsId: 'docker-hub-repo', passwordVariable: 'PAASS', usernameVariable: 'USER')]) {
-                        sh 'docker build -t mashaab/demo-app:jam-1.1 .'
-                        sh 'echo $PASS | docker login -u $USER --password-stdin'
-                        sh 'docker push mashaab/demo-app:jam-1.1'
-                    }
+                    echo "Building the application...."
                 }
             }
         }
+
         stage("deploy") {
+            when {
+                expression {
+                    BRANCH_NAME == "master"
+                }
+            }
             steps {
                 script {
-                    echo "deploying the application..."
+                    echo "Deploying the application...."
                 }
             }
         }
     }
 }
-
