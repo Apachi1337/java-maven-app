@@ -63,8 +63,7 @@ pipeline {
                         sh 'git push origin HEAD:jenkins-jobs'
                     }
                 }
-            }
-         }
-        }
+            }        
+       }
     }
 }
